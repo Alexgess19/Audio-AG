@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audio AG - Broadcast Console</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="background: #f3f4f6; margin: 0; padding: 0; overflow: hidden;">
+
+  <!-- BARRA SUPERIOR DRAGGABLE -->
+  <div id="title-bar">
+    <div id="title-bar-drag">
+      <div id="traffic-light-space"></div>
+      <div id="title-bar-label">
+        <span style="font-size: 1rem;">🎙️</span>
+        <span id="title-bar-text">AUDIO AG <span style="font-weight: 300;">BROADCAST</span></span>
+      </div>
+    </div>
+  </div>
+
+  <main style="display: flex; flex-direction: column; height: calc(100vh - 38px); padding: 15px; box-sizing: border-box; gap: 15px;">
+    
+    <!-- HEADER & MASTER (Panel Fijo Superior) -->
+    <section id="master-section" class="card" style="display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; padding: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="font-size: 1.8rem;">🎙️</div>
+          <h1 style="font-size: 1.2rem; font-weight: 800; color: var(--accent-primary); margin: 0; letter-spacing: 1px;">AUDIO AG <span style="font-weight: 300; color: var(--text-main);">BROADCAST</span></h1>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <div id="engine-status" style="font-size: 0.6rem; font-weight: 800; padding: 4px 8px; border-radius: 4px; background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;">ENGINE: STOPPED</div>
+          <select id="capture-source-select" style="font-size: 0.65rem; padding: 4px; border-radius: 4px; border: 1px solid var(--glass-border); background: white; max-width: 150px;">
+            <option value="">Auto-Detecting Input...</option>
+          </select>
+          <button id="btn-fix-perms" class="btn btn-primary" style="padding: 5px 12px; font-size: 0.7rem; background: #6366f1; border-color: #4f46e5;">FIX PERMISSIONS</button>
+          <button id="btn-capture-system" class="btn btn-primary" style="padding: 5px 12px; font-size: 0.7rem; background: var(--accent-secondary);">RE-CONNECT</button>
+          <div id="bh-status" class="status-badge" style="display: flex; align-items: center; gap: 8px;">
+            <div class="status-dot"></div>
+            <span>Virtual Patch: OK</span>
+            <div style="display: flex; align-items: center; gap: 4px; border-left: 1px solid #ddd; padding-left: 8px; margin-left: 5px;">
+              <div id="raw-input-vu" style="width: 60px; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; border: 1px solid #cbd5e1; position: relative;">
+                  <div id="raw-input-fill" style="width: 0%; height: 100%; background: var(--success); transition: width 0.05s ease; box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);"></div>
+                  <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 0.5rem; font-weight: 800; color: #1e293b; pointer-events: none;">IN</div>
+              </div>
+              <button id="btn-diagnostics" title="Ejecutar Diagnóstico" style="background: none; border: none; cursor: pointer; font-size: 0.8rem; padding: 0 5px;">🔍</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 20px; align-items: center; margin-top: 5px;">
+        <!-- Fader Maestro Unificado -->
+        <div class="channel horizontal" style="flex: 1; background: rgba(0,255,255,0.05); border-color: var(--accent-primary); padding: 15px;">
+          <div style="font-weight: 800; font-size: 0.7rem; color: var(--accent-primary); text-align: center; margin-bottom: 10px; width: 80px;">MASTER AIR</div>
+          <div class="unified-fader">
+            <div class="fader-wrapper">
+                <div class="vu-bg"></div>
+                <div class="vu-fill" id="master-vu-left"></div>
+                <input type="range" id="master-fader" class="fader-input" min="0" max="100" value="80">
+            </div>
+            <div id="master-db" class="db-display" style="min-width: 65px;">-inf dB</div>
+          </div>
+          <!-- Nuevo: Control Maestro de Pre-escucha Profesional -->
+          <div class="unified-fader" style="margin-top: 15px; background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; padding: 10px;">
+            <div style="font-weight: 800; font-size: 0.6rem; color: #6366f1; width: 80px;">MONITOR PFL</div>
+            <div class="fader-wrapper">
+                <div class="vu-bg"></div>
+                <div class="vu-fill" id="pfl-master-vu" style="background: #6366f1;"></div>
+                <input type="range" id="pfl-master-fader" class="fader-input" min="0" max="100" value="80">
+            </div>
+            <div id="pfl-master-db" class="db-display" style="min-width: 65px; color: #6366f1;">-inf dB</div>
+          </div>
+        </div>
+
+        <!-- Controles de Salida -->
+        <div style="display: flex; gap: 15px; align-items: center; background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border);">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.6rem; color: var(--text-dim);">AIR OUT</label>
+              <select id="master-device" style="min-width: 150px;"></select>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.6rem; color: var(--text-dim);">PFL OUT</label>
+              <select id="monitor-device" style="min-width: 150px;"></select>
+            </div>
+          </div>
+          <div style="text-align: center; margin: 0 10px;">
+            <div id="antenna-icon" style="font-size: 1.5rem;">📡</div>
+            <div id="tx-label" style="font-size: 0.5rem; font-weight: bold;">OFF AIR</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Controles de grabación -->
+            <div style="display: flex; align-items: center; gap: 5px;">
+              <select id="rec-format" style="font-size: 0.6rem; padding: 5px 6px; border: 1px solid var(--glass-border); border-radius: 4px; background: #f8fafc; cursor: pointer; font-weight: 700;">
+                <option value="mp3">🎵 MP3</option>
+                <option value="mp4">🎬 MP4</option>
+                <option value="wav">🔊 WAV</option>
+                <option value="ogg">📻 OGG</option>
+                <option value="webm">🌐 WebM</option>
+              </select>
+              <input type="text" id="rec-path" readonly placeholder="Ruta de guardado..." style="font-size: 0.6rem; padding: 5px; border: 1px solid var(--glass-border); border-radius: 4px; width: 110px; cursor: pointer; outline: none; background: #f8fafc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="Haz clic para elegir dónde guardar">
+              <button id="btn-rec" class="btn" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 6px 10px; font-weight: 800; font-size: 0.7rem; cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;">⏺ REC</button>
+            </div>
+            <div id="rec-status" style="font-size: 0.55rem; color: #94a3b8; text-align: right; min-height: 14px;"></div>
+            <button id="btn-broadcast" class="btn btn-primary" style="padding: 10px 20px; width: 100%;">START TRANSMISSION</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEZCLADOR (Panel Flexible Inferior) -->
+    <section id="mixer-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; flex: 1; overflow: hidden;">
+      <div class="card" style="display: flex; flex-direction: column; overflow: hidden; flex: 1;">
+        <div class="card-title">HARDWARE INPUTS</div>
+        <div id="hardware-inputs" class="mixer-grid"></div>
+      </div>
+      <div class="card" style="display: flex; flex-direction: column; overflow: hidden; flex: 1;">
+        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>APPLICATION MIXER</span>
+          <select id="view-mode-select" style="font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--glass-border); background: white; cursor: pointer;">
+            <option value="process">POR PROCESO</option>
+            <option value="category">POR CATEGORÍA</option>
+          </select>
+        </div>
+        <!-- Vista por Proceso (Actual) -->
+        <div id="mixer-channels" class="mixer-grid"></div>
+        <!-- Vista por Categoría (Nuevo) -->
+        <div id="category-mixer" class="mixer-grid" style="display: none;"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="toast-container"></div>
+  <script src="renderer.js"></script>

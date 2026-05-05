@@ -1,0 +1,6 @@
+node_modules/
+dist/
+build_final/
+*.pkg
+.DS_Store
+src/helpers/AudioTapHelper
