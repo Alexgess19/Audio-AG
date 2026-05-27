@@ -14,7 +14,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
 
 SOURCE_IMAGE="$PROJECT_ROOT/assets/icon.png"
-TARGET_DIR="$PROJECT_ROOT/RadioMixerNative/RadioMixerNative/RadioMixerNative/Assets.xcassets/AppIcon.appiconset"
+TARGET_DIR="$PROJECT_ROOT/EstudioAg/EstudioAg/EstudioAg/Assets.xcassets/AppIcon.appiconset"
 
 if [ ! -f "$SOURCE_IMAGE" ]; then
     echo "❌ ERROR: No se encontró el icono origen en: $SOURCE_IMAGE"

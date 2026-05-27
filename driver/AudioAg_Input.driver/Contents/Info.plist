@@ -7,13 +7,13 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>AudioAg_Output</string>
+	<string>AudioAg_Input</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.audioag.output.driver</string>
+	<string>com.estudioag.input.driver</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Estudio Ag Output</string>
+	<string>Estudio Ag Input</string>
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
@@ -28,14 +28,14 @@
 	<string>596</string>
 	<key>CFPlugInFactories</key>
 	<dict>
-		<key>f4a7c9d2-e1b0-4a3f-8c7d-9e8f0a1b2c3d</key>
+		<key>e395c745-4eea-4d94-bb92-46224221047c</key>
 		<string>BlackHole_Create</string>
 	</dict>
 	<key>CFPlugInTypes</key>
 	<dict>
 		<key>443ABAB8-E7B3-491A-B985-BEB9187030DB</key>
 		<array>
-			<string>f4a7c9d2-e1b0-4a3f-8c7d-9e8f0a1b2c3d</string>
+			<string>e395c745-4eea-4d94-bb92-46224221047c</string>
 		</array>
 	</dict>
 	<key>DTCompiler</key>
