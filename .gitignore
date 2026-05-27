@@ -1,6 +1,14 @@
 node_modules/
 dist/
 build_final/
+build_app/
 *.pkg
 .DS_Store
 src/helpers/AudioTapHelper
+
+# Xcode user data
+*.xcuserstate
+xcuserdata/
+
+# Estudio Ag Suite output
+Estudio\ Ag\ Suite/

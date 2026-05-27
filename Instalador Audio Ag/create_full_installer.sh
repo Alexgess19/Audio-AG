@@ -92,6 +92,23 @@ if [ ! -d "./driver/AudioAg_Input.driver" ] || [ ! -d "./driver/AudioAg_Output.d
     echo "❌ ERROR: No se encontraron los drivers virtuales en ./driver (AudioAg_Input.driver o AudioAg_Output.driver)"
     exit 1
 fi
+
+echo "🔐 4b. Firmando drivers HAL antes de empaquetar..."
+DRIVER_SIGNING_IDENTITY=$(security find-identity -v -p codesigning | grep "Apple Development" | head -n 1 | cut -d'"' -f2)
+if [ -z "$DRIVER_SIGNING_IDENTITY" ]; then
+    DRIVER_SIGNING_IDENTITY="-"
+    echo "   [!] No se encontró certificado Apple Development. Firmando drivers ad-hoc (-)"
+    echo "   ⚠️  ADVERTENCIA: Los drivers firmados ad-hoc pueden ser bloqueados por macOS 13+."
+    echo "      Para distribución real, necesitas un certificado 'Developer ID Application'."
+else
+    echo "   [OK] Firmando drivers con: '$DRIVER_SIGNING_IDENTITY'"
+fi
+
+codesign --force --deep --sign "$DRIVER_SIGNING_IDENTITY" "./driver/AudioAg_Input.driver"
+echo "   [OK] AudioAg_Input.driver firmado."
+codesign --force --deep --sign "$DRIVER_SIGNING_IDENTITY" "./driver/AudioAg_Output.driver"
+echo "   [OK] AudioAg_Output.driver firmado."
+
 tar -czf "$PAYLOAD_DIR/driver.tar.gz" -C "./driver" "AudioAg_Input.driver" "AudioAg_Output.driver"
 echo "   [OK] Payloads empaquetados."
 
@@ -113,7 +130,15 @@ chmod +x "$SCRIPTS_DIR/preinstall"
 echo "📝 6. Escribiendo script de postinstall..."
 cat <<'EOF' > "$SCRIPTS_DIR/postinstall"
 #!/bin/bash
+# $1 = path al .pkg
+# $2 = volumen destino (ej: /)
+# $3 = System Folder
+# Los payloads se instalan en: $2/private/tmp/estudioag_temp/
+
+PAYLOAD_BASE="/private/tmp/estudioag_temp"
+
 echo "🚚 Extrayendo binarios del sistema..."
+echo "   Buscando payloads en: $PAYLOAD_BASE"
 
 rm -rf "/Applications/Estudio Ag.app"
 rm -rf "/Applications/Audio AG.app"
@@ -129,19 +154,49 @@ tccutil reset Microphone "Alexgess19.EstudioAg" 2>/dev/null || true
 tccutil reset ScreenCapture "Alexgess19.RadioMixerNative" 2>/dev/null || true
 tccutil reset Microphone "Alexgess19.RadioMixerNative" 2>/dev/null || true
 
-tar -xzf "$2/app.tar.gz" -C "/Applications/"
-tar -xzf "$2/driver.tar.gz" -C "/Library/Audio/Plug-Ins/HAL/"
+echo "📦 Instalando aplicación..."
+if [ -f "$PAYLOAD_BASE/app.tar.gz" ]; then
+    tar -xzf "$PAYLOAD_BASE/app.tar.gz" -C "/Applications/"
+    echo "   [OK] App extraída."
+else
+    echo "   ❌ ERROR: No se encontró app.tar.gz en $PAYLOAD_BASE"
+    exit 1
+fi
+
+echo "🔌 Instalando drivers virtuales HAL..."
+if [ -f "$PAYLOAD_BASE/driver.tar.gz" ]; then
+    tar -xzf "$PAYLOAD_BASE/driver.tar.gz" -C "/Library/Audio/Plug-Ins/HAL/"
+    echo "   [OK] Drivers extraídos."
+else
+    echo "   ❌ ERROR: No se encontró driver.tar.gz en $PAYLOAD_BASE"
+    exit 1
+fi
 
 chown -R root:wheel "/Library/Audio/Plug-Ins/HAL/AudioAg_Input.driver"
 chmod -R 755 "/Library/Audio/Plug-Ins/HAL/AudioAg_Input.driver"
 chown -R root:wheel "/Library/Audio/Plug-Ins/HAL/AudioAg_Output.driver"
 chmod -R 755 "/Library/Audio/Plug-Ins/HAL/AudioAg_Output.driver"
+echo "   [OK] Permisos de drivers configurados."
 
 echo "🔄 Recargando demonio de CoreAudio..."
 killall coreaudiod 2>/dev/null || true
+sleep 3
 launchctl kickstart -kp system/com.apple.audio.coreaudiod 2>/dev/null || true
+sleep 2
 
-sleep 1.5
+echo "✅ Verificando que los drivers quedaron instalados..."
+INPUT_OK=false
+OUTPUT_OK=false
+[ -d "/Library/Audio/Plug-Ins/HAL/AudioAg_Input.driver" ] && INPUT_OK=true
+[ -d "/Library/Audio/Plug-Ins/HAL/AudioAg_Output.driver" ] && OUTPUT_OK=true
+
+if $INPUT_OK && $OUTPUT_OK; then
+    echo "   [OK] Ambos drivers verificados en /Library/Audio/Plug-Ins/HAL/"
+else
+    echo "   ❌ Uno o ambos drivers no están en /Library/Audio/Plug-Ins/HAL/"
+    ls -la /Library/Audio/Plug-Ins/HAL/ 2>/dev/null || true
+fi
+
 GUI_USER=$(stat -f '%Su' /dev/console)
 if [ -n "$GUI_USER" ] && [ "$GUI_USER" != "root" ]; then
     sudo -u "$GUI_USER" open "/Applications/Estudio Ag.app"
